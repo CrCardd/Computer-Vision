@@ -113,13 +113,10 @@ class Network:
         return score / len(y)
 
     def fit(self, x : List[List[float]], y = List[float], epochs : int = 100):
-
-        
         for i in range(epochs):
             print(f'starting epoch\t [{i+1}]')
             for xj, yj in zip(x,y):
                 self.epoch(xj,yj)
-            # self.epoch(x[randint(0,len(y)-1)], y[randint(0,len(y))-1])
             print('score:\t\t', self.scoreAll(x,y))
             print()
 
@@ -134,6 +131,5 @@ X, Y = load_iris(return_X_y = True)
 X_train, X_test, Y_train, Y_test = train_test_split(X, Y, test_size=0.15, random_state=42)
 
 Net = Network()
-Net.fit(X_train, Y_train,1)
-a = Net.scoreAll(X_test, Y_test)
-print(a)
+Net.fit(X_train, Y_train,10)
+print(Net.scoreAll(X_test, Y_test))
