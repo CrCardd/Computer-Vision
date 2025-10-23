@@ -1,45 +1,16 @@
-import tkinter as tk
 from typing import List, Tuple
 from random import random, randint
 import math
-import time
-
-
-PADDING = 100
-CIRCLE_RADIUS = 20
-NEURONS_MARGIN_Y = CIRCLE_RADIUS
-NEURONS_MARGIN_X = CIRCLE_RADIUS*5
-MAX_NEURONS = 10
-Y_INIT = PADDING
-X_INIT = PADDING
-
-DELAY = 10
-
-NEURON_DISABLE_COLOR = "#424242"
-NEURON_ENABLE_COLOR = "#991774"
-LINE_COLOR = "#991774"
-ERROR_COLOR = "#BD3636"
-
-root = tk.Tk()
-root.title("Neural Network")
-root.attributes('-fullscreen', True)
-
-SCREEN_W = root.winfo_screenwidth()
-SCREEN_H = root.winfo_screenheight()
-
-canvas = tk.Canvas(root, width=SCREEN_W, height=SCREEN_H, bg="black")
-canvas.pack()
-
 
 class Neuron:
-    def __init__(self, w : List[float], b : float, lr : float, x : int, y : int, entity_id : int):
+    def __init__(
+            self, w : List[float], 
+            b : float, 
+            lr : float
+        ):
         self.w = w
         self.b = b
         self.lr = lr
-        self.entity_id = entity_id
-
-        self.X = x
-        self.Y = y
 
     def predict(self, x):
         s : float = 0
@@ -70,30 +41,20 @@ class Network:
         self.outputs = outputs
         self.features = features # quantidade de features do dataset
 
-        nLs = [3,2] # Neuronios por camada
-        nLs.append(self.outputs)
+        nLs = [728] # Neuronios por camada
 
+        nLs.append(self.outputs)
 
         nO = self.features
         for i in range(len(nLs)):
             
             neurons = []
+            
             for j in range(nLs[i]):
-                w = [random() for _ in range(nO)]
-                b = random()
-
-                x = X_INIT+(i*NEURONS_MARGIN_X)
-                y = (SCREEN_H/2 - (nLs[i]*(CIRCLE_RADIUS*2+NEURONS_MARGIN_Y))/2) + (j*(CIRCLE_RADIUS*2+NEURONS_MARGIN_Y))
-                id = canvas.create_oval(
-                    x - CIRCLE_RADIUS, 
-                    y - CIRCLE_RADIUS, 
-                    x + CIRCLE_RADIUS, 
-                    y + CIRCLE_RADIUS, 
-                    fill=NEURON_DISABLE_COLOR, 
-                    outline=NEURON_DISABLE_COLOR
-                )
-
-                neuron = Neuron(w, b, self.lr, x, y, id)
+                w = [(random() - 0.5) * 2 for _ in range(nO)]
+                b = (random() - 0.5) * 2
+            
+                neuron = Neuron(w, b, self.lr)
                 neurons.append(neuron)
 
             nO = nLs[i]
@@ -105,12 +66,6 @@ class Network:
             y_results = []        
             for neuron in layer:
                 y = neuron.predict(x)
-
-                self.set_color_neuron(neuron, NEURON_ENABLE_COLOR)
-                if(i < len(self.layers)-1):
-                    self.connect_next_layer(neuron, self.layers[i+1], LINE_COLOR)                    
-                self.set_color_neuron(neuron, NEURON_DISABLE_COLOR)
-
                 y_results.append(y)
 
             x = y_results
@@ -158,12 +113,8 @@ class Network:
 
                 w_error  = sum(next_layer[k].w[j] * output_error[k] for k in range(len(output_error)))
                 
-                self.set_color_neuron(neuron, NEURON_ENABLE_COLOR)
-                self.connect_next_layer(neuron, next_layer, LINE_COLOR, ERROR_COLOR)
-                self.set_color_neuron(neuron, NEURON_DISABLE_COLOR)
-                
                 delta = p * (1 - p) * w_error
-                self.layers[i][j].fit(x_for[i], x_for[i+1], delta)
+                self.layers[i][j].fit(x_for[i], None, delta)
                 crr_layer_error.append(delta)
 
             output_error = crr_layer_error[:]
@@ -192,53 +143,26 @@ class Network:
             print('score:\t\t', self.scoreAll(x,y))
             print()
 
-    def set_color_neuron(self, neuron : Neuron, color : str):
-        canvas.itemconfig(
-            neuron.entity_id, 
-            fill=color,
-            outline=color
-        )
-        root.update()
-        root.after(DELAY)
-
-    def connect_next_neuron(self, neuron : Neuron, next_neuron : Neuron, color : str = "#ffffff"):
-        line_id = canvas.create_line(
-                neuron.X + CIRCLE_RADIUS, 
-                neuron.Y, 
-                next_neuron.X - CIRCLE_RADIUS, 
-                next_neuron.Y, 
-                fill=color, 
-                width=2
-            )
-        return line_id
-    
-    def connect_next_layer(self, neuron : Neuron, next_layer : List[Neuron], color : str = "#ffffff", next_neuron_color = NEURON_DISABLE_COLOR):
-
-        line_ids = []
-        for next_neuron in next_layer:
-            self.set_color_neuron(next_neuron, next_neuron_color)
-            line_id = self.connect_next_neuron(neuron, next_neuron, color)
-            self.set_color_neuron(next_neuron, NEURON_DISABLE_COLOR)
-            line_ids.append(line_id)
-
-        root.update()    
-        root.after(int(DELAY/2))
-        for line_id in line_ids:
-            canvas.delete(line_id)
-
-        root.update()
+    def accuracy(self, x : List[List[float]], y : List[int]):
+        accuracy = 0
+        for xi, yi in zip(x,y):
+            pred = self.predict(xi)
+            max_pred_idx = pred.index(max(pred))
+            accuracy += 1 if max_pred_idx == yi else 0 
+        return accuracy / len(y)
 
 from sklearn.datasets import load_iris
 from sklearn.model_selection import train_test_split
-
+from sklearn.preprocessing import MinMaxScaler
 X, Y = load_iris(return_X_y = True)
+scaler = MinMaxScaler()
+
 X_train, X_test, Y_train, Y_test = train_test_split(X, Y, test_size=0.15, random_state=42)
 
+X_train = scaler.fit_transform(X_train)
+X_test = scaler.transform(X_test)
 
 
 Net = Network(outputs=3, features=4)
 
-
-root.after(1000, lambda: Net.fit(X_train, Y_train, 1))
-
-root.mainloop()
+Net.fit(X_train, Y_train, 1)
