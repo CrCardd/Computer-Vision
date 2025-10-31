@@ -68,7 +68,9 @@ class Neuron:
             outline_disable_color : str = NEURON_OUTLINE_DISABLE_COLOR
         ):
         
-        self.w = np.random.randn(input_size) * 0.1
+        limit = np.sqrt(1 / input_size)
+        self.w = np.random.uniform(-limit, limit, input_size)
+
         self.b = np.random.randn() * 0.1
         self.lr = lr
         self.entity_id = entity_id
@@ -120,9 +122,9 @@ class Neuron:
         return delta
 
 class Network:
-    def __init__(self, outputs, features, neuron_layers = [], line_limit = None, scaler = 100):
+    def __init__(self, outputs, features, lr = 0.1, neuron_layers = [], line_limit = None, scaler = 100):
         self.layers : List[List[Neuron]] = []
-        self.lr = 0.1
+        self.lr = lr
         self.outputs = outputs
         self.features = features # quantidade de features do dataset
         self.line_limit = line_limit
@@ -216,17 +218,19 @@ class Network:
         return a
 
     def epoch(self, x : List[float], y : float):
+        
+        x = x/self.scaler
+
         # X_Matrix
         for i in range(len(x)):
             l = int(i/self.line_limit)
             c = i%self.line_limit
             id = self.x_matrix[l][c]
-            intensity = int(x[i] / self.scaler * self.scaler)
+            intensity = int(x[i] * self.scaler)
             canvas.itemconfig(
                 id, 
                 fill = f"#{intensity:02x}{intensity:02x}{intensity:02x}"
             )
-
         # Forwardpass
         x_for = [x[:]]
         x_values = x[:]
