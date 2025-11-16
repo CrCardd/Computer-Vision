@@ -4,6 +4,6 @@ from Kernel import Kernel, init
 def filter_function(image: List[List[int]], kernel: List[List[int]]):
     return image[:]
 
-Kernel = Kernel("minion.jfif", filter_function)
+Kernel = Kernel("minion.png", filter_function)
 
 init()

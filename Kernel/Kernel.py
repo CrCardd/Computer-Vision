@@ -28,25 +28,18 @@ canvas.pack()
 class Kernel:
 	def __init__(self, image_path : str, f: Callable[[List[List[int]], int], List[List[int]]]):
 		image_archive = cv2.imread(image_path, 0)
-		self.image = image = np.array(image_archive)
+		image_archive = cv2.resize(image_archive, (300, 300))
+		self.image = np.array(image_archive)
+		self.image_original = Image.fromarray(self.image.astype(np.uint8))
+		self.image_original = self.image_original.resize((300 * PIXEL_SIZE, 300 * PIXEL_SIZE), Image.NEAREST)
+		self.image_original = ImageTk.PhotoImage(self.image_original)
+
 		self.filter_function = f
 
-		original_image_y_init = SCREEN_H/2 - (len(  image )/2*PIXEL_SIZE)
-		original_image_x_init = SCREEN_W/6 - (len(image[0])/2*PIXEL_SIZE)
-
-		for line, i in zip(image, range(len(image))):
-			for pixel, j in zip(line, range(len(image[i]))):
-				pos_x_ul = original_image_x_init + (j*PIXEL_SIZE)
-				pos_y_ul = original_image_y_init + (i*PIXEL_SIZE)
-
-				canvas.create_rectangle(
-					pos_x_ul,
-					pos_y_ul,
-					pos_x_ul + PIXEL_SIZE,
-					pos_y_ul + PIXEL_SIZE,
-					fill=    f"#{pixel:02x}{pixel:02x}{pixel:02x}", 
-					outline= f"#{pixel:02x}{pixel:02x}{pixel:02x}"
-				)
+		original_image_y_init = SCREEN_H/2 - (len(   self.image)*PIXEL_SIZE)/2
+		original_image_x_init = SCREEN_W/6 - (len(self.image[0])*PIXEL_SIZE)/2
+			
+		canvas.create_image(original_image_x_init, original_image_y_init, anchor="nw", image=self.image_original, tags="original_img")
 
 		
 		kernel_size_y_mid = SCREEN_H/6
@@ -111,6 +104,7 @@ class Kernel:
 			for entry, id in line:
 				entry.destroy()
 				canvas.delete(id)
+		self.kernel_values_entry = []
 				
 
 		vcmd_int = (root.register(self.is_int), "%P")  

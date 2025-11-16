@@ -6,7 +6,6 @@
 - Exercicio: Neurônio artificial
 - INTERVALO
 - Funcionamento de uma rede neural
-- ...
 
 ### Aula 2
 - BackPropagation

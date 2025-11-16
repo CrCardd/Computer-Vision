@@ -11,6 +11,7 @@ def filter_function(image: List[List[int]], kernel: List[List[int]]):
     filtered = np.clip(filtered, 0, 255).astype(np.uint8)
     return filtered
 
-Kernel = Kernel("minion.jfif", filter_function)
+Kernel = Kernel("minion.png", filter_function)
+# Kernel = Kernel("bill.png", filter_function)
 
 init()
